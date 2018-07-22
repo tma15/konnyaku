@@ -128,8 +128,11 @@ def main():
             y = trg[i:step]
             x = padding(x, src_vcb.word2index['<pad>'])
             y = padding(y, trg_vcb.word2index['<pad>'])
-            x = torch.tensor(x, dtype=torch.long).view(-1, batch_size, 1).to(device)
-            y = torch.tensor(y, dtype=torch.long).view(-1, batch_size, 1).to(device)
+
+            x = torch.tensor(x, dtype=torch.long).t()
+            y = torch.tensor(y, dtype=torch.long).t()
+            x = x.view(-1, batch_size, 1).to(device)
+            y = y.view(-1, batch_size, 1).to(device)
 
             state = model.encoder(x)
             loss = 0
