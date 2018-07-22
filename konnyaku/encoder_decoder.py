@@ -15,11 +15,11 @@ class EncoderDecoder(nn.Module):
         super(EncoderDecoder, self).__init__()
 
         self.encoder = konnyaku.Encoder(
-            len(src_vcb), emb_size, hidden_size,
+            src_vcb, emb_size, hidden_size,
             initial_emb=initial_src_emb,
         )
         self.decoder = konnyaku.AttentionalDecoder(
-            len(trg_vcb), emb_size, hidden_size,
+            trg_vcb, emb_size, hidden_size,
             initial_emb=initial_trg_emb,
         )
 

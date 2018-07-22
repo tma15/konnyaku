@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import sys
+
 import torch
 import torch.nn as nn
 
@@ -6,15 +8,16 @@ import torch.nn as nn
 class Encoder(nn.Module):
     """A bidrectional LSTMs"""
     def __init__(self,
-            vocab_size,
+            vocab,
             emb_size,
             hidden_size,
             initial_emb=None):
         super(Encoder, self).__init__()
         self.emb_size = emb_size
         self.hidden_size = hidden_size
+        self.vocab = vocab
 
-        self.emb = nn.Embedding(vocab_size, emb_size, padding_idx=0)
+        self.emb = nn.Embedding(len(vocab), emb_size, padding_idx=0)
         if initial_emb is not None:
             self.emb.weight.data.copy_(torch.from_numpy(initial_emb))
 
@@ -54,28 +57,15 @@ class Encoder(nn.Module):
             hs.append(hs_bi)
         hs = torch.stack(hs, dim=1)
 
+        mask = source == self.vocab.word2index['<pad>']
+        mask = mask.view(batch_size, source_len)
+
         state = {
             'hs_f': hs_f,
             'cs_f': cs_f,
             'hs_b': hs_b,
             'cs_b': cs_b,
             'hs': hs,
+            'mask': mask,
         }
         return state
-
-
-
-if __name__ == '__main__':
-    sent1 = [1, 2, 3, 4]
-    sent2 = [1, 2, 3, 0]
-    source = torch.tensor([sent1, sent2], dtype=torch.long)
-
-    ### Reshapes to (src_len, batch_size, 1)
-    source = source.view(-1, 2, 1)
-
-    vocab_size = 5
-    emb_size = 2
-    hidden_size = 3
-    encoder = Encoder(vocab_size, emb_size, hidden_size)
-    encoder(source)
-

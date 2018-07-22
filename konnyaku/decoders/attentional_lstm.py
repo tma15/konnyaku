@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import sys
 
+import numpy
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -9,18 +10,18 @@ from konnyaku.decoders.lstm import Decoder
 
 class AttentionalDecoder(Decoder):
     def __init__(self,
-            vocab_size,
+            vocab,
             emb_size,
             hidden_size,
             initial_emb=None):
         super(AttentionalDecoder, self).__init__(
-            vocab_size,
+            vocab,
             emb_size,
             hidden_size,
             initial_emb=initial_emb,
         )
 
-        self.out = nn.Linear(2 * hidden_size, vocab_size)
+        self.out = nn.Linear(2 * hidden_size, len(vocab))
 
     def context(self, h, encoder_hiddens, state):
         """Calculates a context vector base on dot attender"""
@@ -34,6 +35,11 @@ class AttentionalDecoder(Decoder):
         ### = (batch_size, src_len, 1)
         score = torch.matmul(encoder_hiddens, h)
         score = score.view(batch_size, src_len)
+
+        ### Fills with -inf where a word is <pad> for assigning 0
+        ### when calculating softmax
+        mask = state['mask']
+        score = score.masked_fill_(mask, -numpy.inf)
 
         p_att = F.softmax(score, dim=1)
 

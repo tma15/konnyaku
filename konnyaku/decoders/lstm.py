@@ -5,7 +5,7 @@ import torch.nn as nn
 
 class Decoder(nn.Module):
     def __init__(self,
-            vocab_size,
+            vocab,
             emb_size,
             hidden_size,
             initial_emb=None):
@@ -13,12 +13,12 @@ class Decoder(nn.Module):
         self.emb_size = emb_size
         self.hidden_size = hidden_size
 
-        self.emb = nn.Embedding(vocab_size, emb_size, padding_idx=0)
+        self.emb = nn.Embedding(len(vocab), emb_size, padding_idx=0)
         if initial_emb is not None:
             self.emb.weight.data.copy_(torch.from_numpy(initial_emb))
 
         self.lstm = nn.LSTMCell(emb_size, hidden_size)
-        self.out = nn.Linear(hidden_size, vocab_size)
+        self.out = nn.Linear(hidden_size, len(vocab))
 
     def step(self, word, state):
         batch_size = word.shape[0]
