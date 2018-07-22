@@ -3,6 +3,7 @@ import argparse
 import configparser
 
 import torch
+import torch.nn as nn
 
 import konnyaku
 
@@ -44,6 +45,8 @@ def main():
     src = konnyaku.dataset.load_data(args.src_file, src_vcb)
     trg = konnyaku.dataset.load_data(args.trg_file, trg_vcb)
 
+    criterion = nn.CrossEntropyLoss(ignore_index=trg_vcb.word2index['<pad>'])
+
     with torch.no_grad():
         accum_loss = 0
         for i in range(len(src)):
@@ -58,7 +61,8 @@ def main():
             print('Source', src_words)
             print('Target', trg_words)
             o = model.generate(x)
-            print(o, flush=True)
+            print('Output', o, flush=True)
+            print('==')
 
             state = model.encoder(x)
             loss = 0
