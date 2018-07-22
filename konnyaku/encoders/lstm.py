@@ -5,13 +5,18 @@ import torch.nn as nn
 
 class Encoder(nn.Module):
     """A bidrectional LSTMs"""
-    def __init__(self, vocab_size, emb_size, hidden_size, device=None):
+    def __init__(self,
+            vocab_size,
+            emb_size,
+            hidden_size,
+            initial_emb=None):
         super(Encoder, self).__init__()
         self.emb_size = emb_size
         self.hidden_size = hidden_size
-        self.device = device
 
         self.emb = nn.Embedding(vocab_size, emb_size, padding_idx=0)
+        if initial_emb is not None:
+            self.emb.weight.data.copy_(torch.from_numpy(initial_emb))
 
         self.lstm_f = nn.LSTMCell(emb_size, hidden_size)
         self.lstm_b = nn.LSTMCell(emb_size, hidden_size)
@@ -22,10 +27,10 @@ class Encoder(nn.Module):
 
         embed = self.emb(source)
 
-        h_f = torch.zeros(batch_size, self.hidden_size, device=self.device)
-        c_f = torch.zeros(batch_size, self.hidden_size, device=self.device)
-        h_b = torch.zeros(batch_size, self.hidden_size, device=self.device)
-        c_b = torch.zeros(batch_size, self.hidden_size, device=self.device)
+        h_f = source.new_zeros(batch_size, self.hidden_size, dtype=torch.float32)
+        c_f = source.new_zeros(batch_size, self.hidden_size, dtype=torch.float32)
+        h_b = source.new_zeros(batch_size, self.hidden_size, dtype=torch.float32)
+        c_b = source.new_zeros(batch_size, self.hidden_size, dtype=torch.float32)
 
         hs_f = []
         cs_f = []
@@ -44,9 +49,10 @@ class Encoder(nn.Module):
             cs_b.insert(0, c_b)
 
         hs = []
-        cs = []
         for i in range(source_len):
-            hs = hs_f[i] + hs_b[i]
+            hs_bi = hs_f[i] + hs_b[i]
+            hs.append(hs_bi)
+        hs = torch.stack(hs, dim=1)
 
         state = {
             'hs_f': hs_f,
@@ -62,7 +68,6 @@ class Encoder(nn.Module):
 if __name__ == '__main__':
     sent1 = [1, 2, 3, 4]
     sent2 = [1, 2, 3, 0]
-#     source = torch.tensor(sent, dtype=torch.long)
     source = torch.tensor([sent1, sent2], dtype=torch.long)
 
     ### Reshapes to (src_len, batch_size, 1)

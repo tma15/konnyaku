@@ -26,9 +26,8 @@ class Vocabulary:
     def save(self, vocabfile):
         with open(vocabfile, 'w') as f:
             for word in self.index2word:
-                print(word, filename=f)
+                print(word, file=f)
 
-    @classmethod
     def load(self, vocabfile):
         with open(vocabfile, 'r') as f:
             for line in f:

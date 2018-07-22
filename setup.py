@@ -9,8 +9,9 @@ setup(name='konnyaku',
     ],
     entry_points = {
         'console_scripts': [
-#             'konnyaku_train=konnyaku.__train__:main',
-            'hoge=konnyaku.hoge:main',
+            'konnyaku_train=konnyaku.__train__:main',
+            'konnyaku_eval=konnyaku.__eval__:main',
         ],
     },
+    zip_safe=False,
 )

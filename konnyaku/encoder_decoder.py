@@ -2,43 +2,46 @@
 import torch
 import torch.nn as nn
 
+import konnyaku
+
 class EncoderDecoder(nn.Module):
     def __init__(self,
-            encoder,
-            decoder,
+            src_vcb,
             trg_vcb,
-            device=None):
+            emb_size,
+            hidden_size,
+            initial_src_emb=None,
+            initial_trg_emb=None):
         super(EncoderDecoder, self).__init__()
 
-        self.encoder = encoder
-        self.decoder = decoder
-        self.trg_vcb = trg_vcb
-        self.device = device
+        self.encoder = konnyaku.Encoder(
+            len(src_vcb), emb_size, hidden_size,
+            initial_emb=initial_src_emb,
+        )
+        self.decoder = konnyaku.AttentionalDecoder(
+            len(trg_vcb), emb_size, hidden_size,
+            initial_emb=initial_trg_emb,
+        )
 
-    def generate(self, source):
+        self.src_vcb = src_vcb
+        self.trg_vcb = trg_vcb
+
+    def generate(self, source, max_len=20):
         state = self.encoder(source)
 
-        max_len = 10
-        word = torch.tensor(
-            [[self.trg_vcb.word2index['<s>']]], dtype=torch.long, device=self.device)
-#         print('word', word.shape, word)
+        word = source.new_tensor(
+            [[self.trg_vcb.word2index['<s>']]], dtype=torch.long)
         output = []
         for t in range(max_len):
             state = self.decoder.step(word, state)
             topv, topi = state['out'].data.topk(1)
-#             if t == 0:
-#                 print(topv)
-#             print(topi)
             if topi.item() == self.trg_vcb.word2index['</s>']:
                 break
             else:
                 output.append(self.trg_vcb.index2word[topi.item()])
 
-#             print('topi', topi.shape, topi)
-
             word = topi
-
-#             word = topi.squeeze().detach()
-#             print('word', word.shape, word)
-
         return output
+
+    def nbest_generate(self, source, n=5):
+        raise NotImplementedError
