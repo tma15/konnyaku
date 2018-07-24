@@ -159,7 +159,7 @@ def main():
     torch.save(model.state_dict(), args.model_file)
 
     with torch.no_grad():
-        device = torch.device('cpu')
+        cpu = torch.device('cpu')
         model.to(cpu)
         for i in range(num):
             x = src[i]
