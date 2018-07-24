@@ -131,8 +131,8 @@ def main():
 
             x = torch.tensor(x, dtype=torch.long).t()
             y = torch.tensor(y, dtype=torch.long).t()
-            x = x.view(-1, batch_size, 1).to(device)
-            y = y.view(-1, batch_size, 1).to(device)
+            x = x.view(-1, x.shape[1], 1).to(device)
+            y = y.view(-1, y.shape[1], 1).to(device)
 
             state = model.encoder(x)
             loss = 0
@@ -159,6 +159,8 @@ def main():
     torch.save(model.state_dict(), args.model_file)
 
     with torch.no_grad():
+        device = torch.device('cpu')
+        model.to(cpu)
         for i in range(num):
             x = src[i]
             y = trg[i]
