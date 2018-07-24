@@ -58,7 +58,7 @@ class Encoder(nn.Module):
         hs = torch.stack(hs, dim=1)
 
         mask = source == self.vocab.word2index['<pad>']
-        mask = mask.view(batch_size, source_len)
+        mask = mask.view(source_len, batch_size).t()
 
         state = {
             'hs_f': hs_f,
